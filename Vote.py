@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 
 import requests
 import re
+import urllib
 
 url = 'http://www.radiogong.com/radio-gong-open-air-fuer-deinen-ort/radio-gong-open-air-fuer-deinen-ort-voting.html'
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -22,16 +23,23 @@ def enter(event):
 
     r = requests.post(requestlink,
                       cookies=cookie,
-                      files=dict(foo='bar'),
-                      headers=headers,
-                      data={'tx_powermail_pi1[uid36497]':'torben1234@gmx.de','tx_powermail_pi1[uid36495]': 'Aub','tx_powermail_pi1[uid36507]': cap})
+                      files={'tx_powermail_pi1[uid36495]': (None, 'Neubrunn'), 
+                             'tx_powermail_pi1[uid36497]': (None, email.get()), 
+                             'tx_powermail_pi1[uid36507]': (None,cap)},
+                      headers=headers)
 
     res.configure(text="SENT")
     res.update()
 
+    #pretty_print_POST(r.request)
+	
     if len(re.findall('Deine Stimme wurde erfolgreich verschickt und ist soeben bei uns angekommen(.*?)span>', r.text)) > 0:
         res.configure(text="Vote erfolgreich")
         res.update()
+        global counter
+        counter += 1
+        counter_label.configure(text= "Successfull votes: " + str(counter))
+        counter_label.update()
     else:
         res.configure(text="ERROR")
         res.update()
@@ -56,19 +64,48 @@ def update_img():
     panel.configure(image=img2)
     panel.image = img2
 
+def pretty_print_POST(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
 
+    However pay attention at the formatting used in 
+    this function because it is programmed to be pretty 
+    printed and may differ from the actual request.
+    """
+    print('{}\n{}\n{}\n\n{}'.format(
+        '-----------START-----------',
+        req.method + ' ' + req.url,
+        '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+        req.body,
+    ))
+
+
+    
+print "Supporting Neubrunn at Radio-Gong Buergermeisterschaft 2017"
+print "Build by Lukas Bauer, adopted for Windoof & enhanced by Frank Steiler"
 
 window = Tk()
 
-#img = ImageTk.PhotoImage(Image.open("cap.jpg"))
 panel = Label(window)
 panel.pack(side = "top", fill = "both", expand = "yes")
+
+email = Entry(window)
+email.insert(0,"your@email.de")
+email.focus()
+email.selection_range(0, END)
+email.pack()
 
 entry = Entry(window)
 entry.bind("<Return>", enter)
 entry.pack()
 res = Label(window, text="0 0 0 0 0")
 res.pack()
+
+counter_label = Label(window, text="Successful votes: 0")
+counter_label.pack()
+global counter
+counter = 0
 
 init()
 update_img()
