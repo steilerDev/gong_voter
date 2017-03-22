@@ -47,7 +47,6 @@ class CIntruderCrack(object):
         Initialize main CIntruder
         """
         self.captcha = self.set_captcha(captcha)
-        start = time.time()
 
     def buildvector(self, im):
         d1 = {}
@@ -70,19 +69,22 @@ class CIntruderCrack(object):
         dictionary = dirs
         imageset = []
         last_letter = None
-        logger.info("Loading dictionary...")
+        logging.info("Loading dictionary...")
         for letter in dictionary:
             for img in os.listdir('dictionary/'+letter):
                 temp = []
                 temp.append(self.buildvector(Image.open("dictionary/%s/%s"%(letter, img))))
                 imageset.append({letter:temp})
+                
+        logging.info("Loading captcha...")
         try:
             im = Image.open(self.captcha)
             im2 = Image.new("P", im.size, 255)
             im = im.convert("P")
         except:
-            logger.error("Error during cracking!. Is that captcha supported?")
+            logging.error("Error during cracking!. Is that captcha supported?")
             return
+        
         temp = {}
         for x in range(im.size[1]):
             for y in range(im.size[0]):
@@ -95,6 +97,7 @@ class CIntruderCrack(object):
         start = 0
         end = 0
         letters = []
+                
         for y in range(im2.size[0]): # slice across
             for x in range(im2.size[1]): # slice down
                 pix = im2.getpixel((y, x))
@@ -111,8 +114,7 @@ class CIntruderCrack(object):
         count = 0
         countid = 1
         word_sug = None
-        end = time.time()
-        elapsed = end - start
+
         words = {}
         for letter in letters:
             m = hashlib.md5()
@@ -125,26 +127,25 @@ class CIntruderCrack(object):
             guess.sort(reverse=True)
             word_per = guess[0][0] * 100
             if str(word_per) == "100.0":
-                print "Image position   :", countid
-                print "Broken Percent   :", int(round(float(word_per))), "%", "[+CRACKED!]"
+                logging.info("Image position   :" + str(countid))
+                logging.info("Broken Percent   :" + str(int(round(float(word_per)))) + "%", "[+CRACKED!]")
                 words[countid] = guess[0][1]
             else:
-                print "Image position   :", countid
-                print "Broken Percent   :", "%.4f" % word_per, "%"
+                logging.info("Image position   :" + str(countid))
+                logging.info("Broken Percent   :", "%.4f" % word_per, "%")
                 words[countid] = "_"
-            print "Word suggested   :", guess[0][1]
-            print "-------------------"
+            logging.info("Word suggested   :", guess[0][1])
+
             if word_sug == None:
                 word_sug = str(guess[0][1])
             else:
                 word_sug = word_sug + str(guess[0][1])
             count += 1
             countid = countid + 1
-        print "\n========================================"
+
         if word_sug is None:
-            print "Suggested Solution: ", "[ No idea!. Try to add more images to your dictionary/]"
+            logging.warning("No match found, try to add more images to your dictionary")
         else:
-            print "Cracked Words: ", words.values()
-            print "Suggested Solution: ", "[", word_sug, "]"
-        print "========================================\n"
+            logging.info("Cracked Words: ", words.values())
+            logging.info("Suggested Solution: ", "[", word_sug, "]")
         return word_sug
