@@ -1,9 +1,9 @@
 import logging
 
-import ocr
+from training import CIntruderTraining
 from crack import CIntruderCrack
 import gui
-import image
+import vote_image
 import networking
 import vote_logging
 
@@ -12,14 +12,17 @@ def enter(event):
     gui.send()
     if networking.post(gui.get_email(), gui.get_captcha()):
         gui.success()
+        trainer = CIntruderTraining("cap.gif", gui.get_captcha())
     else:
         gui.error()
+        
+    trainer = CIntruderTraining("cap.gif", gui.get_captcha())
     reset()
 
 def reset():
     logging.info("Resetting...")
     #networking.reset()
-    image.process_img()
+    vote_image.process_img()
     gui.reset()
     try_crack()
     

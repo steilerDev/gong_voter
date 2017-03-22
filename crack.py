@@ -20,8 +20,8 @@ Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 """
 from PIL import Image
 import hashlib, os, math, time
-import shutil
 import logging
+import vote_image
 
 class VectorCompare:
     def magnitude(self, concordance):
@@ -63,67 +63,37 @@ class CIntruderCrack(object):
         self.captcha = captcha
         return captcha
  
-    def crack(self):
-        v = VectorCompare()
+    def load_dictionary(self):
         path, dirs, files = os.walk("dictionary/").next()
         dictionary = dirs
         imageset = []
-        last_letter = None
         logging.info("Loading dictionary...")
         for letter in dictionary:
             for img in os.listdir('dictionary/'+letter):
                 temp = []
                 temp.append(self.buildvector(Image.open("dictionary/%s/%s"%(letter, img))))
                 imageset.append({letter:temp})
-                
-        logging.info("Loading captcha...")
-        try:
-            im = Image.open(self.captcha)
-            im2 = Image.new("P", im.size, 255)
-            im = im.convert("P")
-        except:
-            logging.error("Error during cracking!. Is that captcha supported?")
-            return
+        return imageset
+ 
+    def crack(self):
+        v = VectorCompare()
         
-        temp = {}
-        for x in range(im.size[1]):
-            for y in range(im.size[0]):
-                pix = im.getpixel((y, x))
-                temp[pix] = pix
-                if pix == 0: # pixel colour id 
-                    im2.putpixel((y, x), 0)
-        inletter = False
-        foundletter = False
-        start = 0
-        end = 0
-        letters = []
-        #im2.save("im2.gif", "GIF")
-                
-        for y in range(im2.size[0]): # slice across
-            for x in range(im2.size[1]): # slice down
-                pix = im2.getpixel((y, x))
-                if pix == 255:
-                    inletter = True
-            if foundletter == False and inletter == True:
-                foundletter = True
-                start = y
-            if foundletter == True and inletter == False:
-                foundletter = False
-                end = y
-                letters.append((start, end))
-                logging.info("Found letter: (" + str(start) + " - " + str(end) + ")")
-            inletter = False
-            
+        dictionary = self.load_dictionary()
+        
+        captcha_img = vote_image.load_captcha_for_cintrunder(self.captcha)
+        prep_captcha_img = vote_image.prepare_img_for_cintrunder(captcha_img)
+        
+        letter_x_coordinates = vote_image.seperate_letters(prep_captcha_img)
+        letter_imgs = vote_image.extract_letters(prep_captcha_img, letter_x_coordinates)
+        
         countid = 1
         word_sug = None
-        for letter in letters:
-            m = hashlib.md5()
-            im3 = im2.crop((letter[0], 0, letter[1], im2.size[1]))
+        for letter_img in letter_imgs:
             guess = []
-            for image in imageset:
-                for x, y in image.iteritems():
-                    if len(y) != 0:
-                        guess.append(( v.relation(y[0], self.buildvector(im3)), x))
+            for image in dictionary:
+                for letter, dict_letter_imgs in image.iteritems():
+                    if len(dict_letter_imgs) != 0:
+                        guess.append(( v.relation(dict_letter_imgs[0], self.buildvector(letter_img)), letter))
             guess.sort(reverse=True)
             word_per = guess[0][0] * 100
             logging.info(str(countid) + ". letter: '" + str(guess[0][1]) + "' (Confidence: " + str(word_per) + "%)")
