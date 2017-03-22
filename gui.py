@@ -72,8 +72,8 @@ def reset():
 def get_captcha():
     return captcha.get()
     
-def set_captcha(captcha):
-    captcha.insert(0, captcha)
+def set_captcha(captcha_txt):
+    captcha.insert(0, captcha_txt)
     captcha.selection_range(0, END)
     captcha.update()
     

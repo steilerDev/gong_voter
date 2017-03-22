@@ -18,16 +18,16 @@ def enter(event):
 
 def reset():
     logging.info("Resetting...")
-    networking.reset()
+    #networking.reset()
     image.process_img()
-    try_crack()
     gui.reset()
+    try_crack()
     
 def try_crack():
     cracker = CIntruderCrack("cap.gif")
     result = cracker.crack()
     if result is not None and len(result) == 5:
-        logger.info("Cracker produced: " + result)
+        logging.info("Cracker produced: " + result)
         gui.set_captcha(result)
     else:
         logging.warning("Cracker produced no result")
