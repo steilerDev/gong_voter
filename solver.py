@@ -1,7 +1,7 @@
 from dictionary import Dictionary
 import logging
 
-CONFIDENCE_THRESHOLD = 95.0
+CONFIDENCE_THRESHOLD = 90.0
 
 
 class Solver:

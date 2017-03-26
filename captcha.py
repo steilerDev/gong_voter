@@ -47,22 +47,23 @@ class Captcha:
             logging.error("No characters allowed in captcha solution!")
             return False
 
-        post_response = requests.post(POST_URL,
-                                      cookies=self.cookies,
-                                      files={'tx_powermail_pi1[uid36495]': (None, VOTE),
-                                             'tx_powermail_pi1[uid36497]': (None, email),
-                                             'tx_powermail_pi1[uid36507]': (None, captcha)},
-                                      headers=HEADERS)
-        logging.debug("POST request: %s", Captcha.pretty_print(post_response.request))
+        #post_response = requests.post(POST_URL,
+        #                              cookies=self.cookies,
+        #                              files={'tx_powermail_pi1[uid36495]': (None, VOTE),
+        #                                     'tx_powermail_pi1[uid36497]': (None, email),
+        #                                     'tx_powermail_pi1[uid36507]': (None, captcha)},
+        #                              headers=HEADERS)
+        #logging.debug("POST request: %s", Captcha.pretty_print(post_response.request))
 
-        if len(re.findall('Deine Stimme wurde erfolgreich verschickt und ist soeben bei uns angekommen(.*?)span>', post_response.text)) > 0:
-            logging.info("Vote successful!")
-            return True
-        else:
-            logging.error("Vote not successful!")
-            logging.debug("Response:")
-            logging.debug(post_response.text)
-            return False
+        #if len(re.findall('Deine Stimme wurde erfolgreich verschickt und ist soeben bei uns angekommen(.*?)span>', post_response.text)) > 0:
+        #    logging.info("Vote successful!")
+        #    return True
+        #else:
+        #    logging.error("Vote not successful!")
+        #    logging.debug("Response:")
+        #    logging.debug(post_response.text)
+        #    return False
+        return True
 
     @staticmethod
     def pretty_print(request):
@@ -93,8 +94,7 @@ class Captcha:
     def populate_letter_bitmaps(self):
         for letter in self.seperate_letters():
             letter = self.crop_letter(letter)
-            letter.save("letter.gif")
-            self.letters.append(Bitmap(self.crop_letter(letter)))
+            self.letters.append(Bitmap(image=self.crop_letter(letter)))
 
         if len(self.letters) != 5:
             logging.fatal("Unable to detect all letters!")
@@ -146,7 +146,6 @@ class Captcha:
                 logging.info("Found letter y-boundaries: (" + str(start) + " - " + str(end) + ")")
                 return letter.crop((0, start, letter.size[0], end))
             inletter = False
-        logging.warn("Unable to find letter boundary!")
         return letter
 
     def __iter__(self):

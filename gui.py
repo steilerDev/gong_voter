@@ -58,7 +58,6 @@ class GUI:
         logging.info("Resetting captcha")
         self.info.configure(text="Enter CapKey")
         self.info.update()
-        captcha.image.save("captcha123.gif")
         image = ImageTk.PhotoImage(captcha.image)
         self.captcha_img.configure(image=image)
         self.captcha_img.image = image

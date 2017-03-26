@@ -5,10 +5,14 @@ BITMAP_WIDTH = 32
 
 
 class Bitmap:
-    def __init__(self, image, confidence=0.0, letter=""):
+    def __init__(self, image=None, bitmap=None, bitmap_string=None, confidence=0.0, letter=""):
         self.confidence = confidence
         self.letter = letter
-        self.bitmap = Bitmap.image_to_bitmap(image)
+        if image is not None:
+            self.bitmap, self.bitmap_string = Bitmap.image_to_bitmap(image)
+        elif bitmap is not None and bitmap_string is not None:
+            self.bitmap = bitmap
+            self.bitmap_string = bitmap_string
         self.count = 0
         self.refresh_count()
 
@@ -33,6 +37,7 @@ class Bitmap:
         logging.info("Building bitmap")
         logging.debug("Bitmap:")
         bitmap = []
+        bitmap_string = ""
         for y in range(image.size[1]):
             line_string = ""
             for x in range(image.size[0]):
@@ -48,10 +53,11 @@ class Bitmap:
             else:
                 logging.warn("Actual bitmap width is larger than %d: %d. Loosing information!", BITMAP_WIDTH, len(line_string))
                 line_string = line_string[:BITMAP_WIDTH]
+            bitmap_string += line_string
             logging.debug(line_string)
             bitmap.append(bitarray(line_string))
 
-        return bitmap
+        return bitmap, bitmap_string
 
     # Compares two bitmap objects
     @staticmethod
